@@ -4,7 +4,7 @@ const initialState = fromJS({
         id: "",
         data: OrderedMap({})
     },
-    vocabularies: OrderedMap({}),
+    vocabularies: OrderedMap(fromJS({})),
 })
 
 const vocabulariesStorage = (state = initialState, action) => { 
@@ -19,7 +19,7 @@ const vocabulariesStorage = (state = initialState, action) => {
         }
         case "UPDATE_VOCABULARIES": { 
             const { vocabularies } = action.data;
-            state = state.update("vocabularies", (vocData) => vocData.merge(vocabularies));
+            state = state.update("vocabularies", (vocData) => vocData.merge(fromJS(vocabularies)));
             return state;
         }
         case "SET_VOCABULARIES": { 
@@ -29,8 +29,23 @@ const vocabulariesStorage = (state = initialState, action) => {
             return state;
         }
         case "UPDATE_VOCAB_DATA_COMPLETE": {
-            const { isLiked, userId, vocabId } = action.data;
-            state = state.setIn(["vocabularies", vocabId, "isLiked"], isLiked);
+            const { isLiked, userId, vocabId, likesCount, commentData, rmCmtIdx } = action.data;
+            if (isLiked !== undefined) { 
+                state = state.setIn(["vocabularies", vocabId, "isLiked"], isLiked);
+                state = state.updateIn(["vocabularies", vocabId, "likesCount"], (value) => isLiked ? value + 1 : value - 1);
+            }
+            if (likesCount !== undefined) { 
+                state = state.updateIn(["vocabularies", vocabId, "likesCount"], (value) => value + likesCount);
+            }
+            
+            if (commentData !== undefined) { 
+                state = state.updateIn(["vocabularies", vocabId, "comments"], (comments) => comments.push(fromJS(commentData)));
+                state = state.updateIn(["vocabularies", vocabId, "commentsCount"], (value) => value + 1);
+            } else if (rmCmtIdx !== undefined) { 
+                state = state.updateIn(["vocabularies", vocabId, "comments"], (value) => value.splice(rmCmtIdx, 0));
+                state = state.updateIn(["vocabularies", vocabId, "commentsCount"], (value) => value--);
+            }
+
             return state;
         }
         default : 

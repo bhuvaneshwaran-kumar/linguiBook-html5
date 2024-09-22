@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { loadVocData } from '../thunk/ctxtVoc'
 import { Image } from '../styles/style'
 import { updateVocabData } from '../actions'
+import CommentSectionComponent from './CommentSectionComponent'
 
 
 const VocabularyWrap = styled.div`
@@ -90,7 +91,7 @@ const CardContainer = styled.div`
   }
 `
 
-const CenterLoader = styled.div`
+export const CenterLoader = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
@@ -110,6 +111,12 @@ function VocabularyComponent(props) {
   const { vocabularies, activeContextId } = props;
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef(null);
+  const [showComment, setShowComment] = useState("")
+
+  const handleShowComment = (vocId) => { 
+    vocId = vocId === showComment ? "" : vocId;
+    setShowComment(vocId);
+  }
 
   const loadVocabChunk = async () => {
     const payLoad = { contextId: activeContextId, from: vocabularies.size, size: 10 };
@@ -122,7 +129,7 @@ function VocabularyComponent(props) {
   }
 
   const handleLikeClick = (isLiked, vocabId) => { 
-    props.updateVocabData({ isLiked, vocabId });
+    props.updateVocabData({ isLiked, vocabId, ctxId: props.ctxId });
   }
 
   const lastElementRef = useCallback((node) => {
@@ -164,8 +171,13 @@ function VocabularyComponent(props) {
           </div>
           <div className="voc-btm" ref={(index + 1 === vocabularies.size) ? lastElementRef : null}>
             <img src={`/images/post/${vocab.get("isLiked") ? 'like-active' : 'like'}.png`} alt='like' onClick={() => handleLikeClick(!vocab.get("isLiked"), key)} />
-            <img src='/images/post/comment.png' alt='comment' />
+            <span>{vocab.get("likesCount")} likes</span>
+            <img src='/images/post/comment.png' alt='comment' onClick={() => handleShowComment(key)} />
+            <span>{vocab.get("commentsCount")} comments</span>
           </div>
+          {
+            showComment === key && <CommentSectionComponent vocabId={key} />
+          }
         </CardContainer>
       )
     })
@@ -192,6 +204,7 @@ function VocabularyComponent(props) {
 const mapStateToProps = (state, ownProps) => ({
   isVocChunkLoad: state.localStorage.get("isVocChunkLoad"),
   isVocLoading: state.localStorage.get("isVocLoading"),
+  ctxId: state.vocabulariesStorage.getIn(["context", "id"]),
 })
 
 const mapDispatchToProps = (dispatch, ownProps) => ({

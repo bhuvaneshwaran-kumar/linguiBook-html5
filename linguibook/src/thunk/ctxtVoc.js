@@ -1,6 +1,6 @@
 import { setLoader, setVocabularies, updateVocabularies } from "../actions";
 import { axiosWithAuthToken as authAxios } from "../utils/interceptors"
-import { Map, OrderedMap } from "immutable"
+import { Map, OrderedMap, fromJS } from "immutable"
 import { wait } from "./auth";
 export const getContextDetials = async (params = {}) => {
     let headers = {};
@@ -21,7 +21,7 @@ export const getVocDetials = async (params = {}) => {
     }
     const resp = await authAxios.post(`/api/project/getVoc`, { contextId, from, size }, headers);
     let { vocabularies } = resp.data.data;
-    vocabularies = OrderedMap(vocabularies).sortBy((value, key) => value.index).mapEntries(([key, value]) => [key, Map(value)]);;
+    vocabularies = OrderedMap(vocabularies).sortBy((value, key) => value.index).mapEntries(([key, value]) => [key, fromJS(value)]);;
     return { vocabularies };
 }
 

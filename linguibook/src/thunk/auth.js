@@ -2,6 +2,7 @@ import { axiosInstance as axios } from '../utils/interceptors';
 import { updateAppLoad, updateContextData, updateUserAuth, updateUserData, updateVocabularies } from '../actions';
 import { setAccessToken } from '../utils/token';
 import { getContextDetials, getVocDetials } from './ctxtVoc';
+import { getCommunities } from './community';
 
 export const fetchRefreshToken = async () => {
     const response = await axios.post(`/api/auth/refresh`, {}, { withCredentials: true });
@@ -28,6 +29,7 @@ export const checkUserAuth = () => {
             const { user } = await fetchRefreshToken();
             const { activeContextId, contextData } = await getContextDetials();
             const { vocabularies } = await getVocDetials({ contextId: activeContextId });
+            await dispatch(getCommunities());
 
             await dispatch(updateContextData({ id: activeContextId, data: contextData }));
             await dispatch(updateVocabularies({ vocabularies }));
@@ -54,6 +56,7 @@ export const handleLogin = (userName, password) => {
             setAccessToken(accessToken);
             const { activeContextId, contextData } = await getContextDetials();
             const { vocabularies } = await getVocDetials({ contextId: activeContextId });
+            await dispatch(getCommunities());
 
             await dispatch(updateContextData({ id: activeContextId, data: contextData }));
             await dispatch(updateVocabularies({ vocabularies }));

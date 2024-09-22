@@ -18,7 +18,8 @@ const initialState = fromJS({
     isAiMsgLoading: false,
     aiUserMsgSugg: "",
     isVocChunkLoad: false,
-    isVocLoading: false
+    isVocLoading: false,
+    socketStatus: "connecting",
 })
 
 const localStorage = (state = initialState, action) => { 
@@ -57,6 +58,10 @@ const localStorage = (state = initialState, action) => {
         }
         case "SET_AI_USER_MSG_SUGG": { 
             state = state.set("aiUserMsgSugg", action.data);
+            return state;
+        }
+        case "SET_SOCKET_STATUS": {
+            state = state.set("socketStatus", action.data);
             return state;
         }
         default : 

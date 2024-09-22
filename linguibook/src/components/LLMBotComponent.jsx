@@ -199,6 +199,7 @@ function LLMBotComponent(props) {
   const getSuggestionArr = (word) => {
     return [
       `give more related words to ${word}`,
+      `give more related words to ${word} along with example`,
       `give meaning for word ${word} in different context`,
     ]
   }
@@ -212,8 +213,8 @@ function LLMBotComponent(props) {
             <TransitionGroup className={"ai-convo"}>
               {
                 props.aiConvo.map((data, index) => (
-                  <CSSTransition classNames={`ai-convo-item`} timeout={500} appear>
-                    <div key={index + "aiConvo"} className={`msg-${data.get("from")}`} ref={(!props.isAiMsgLoading && index === props.aiConvo.size - 1) ? lastMsgRef : null} dangerouslySetInnerHTML={{ __html: data.get("msg").replaceAll("\n", "<br>").replaceAll(/\*\*(.*?)\*\*/g, '<b>$1</b>') }}></div>
+                  <CSSTransition classNames={`ai-convo-item`} timeout={500} appear key={index + "aiConvo"}>
+                    <div className={`msg-${data.get("from")}`} ref={(!props.isAiMsgLoading && index === props.aiConvo.size - 1) ? lastMsgRef : null} dangerouslySetInnerHTML={{ __html: data.get("msg").replaceAll("\n", "<br>").replaceAll(/\*\*(.*?)\*\*/g, '<b>$1</b>') }}></div>
                   </CSSTransition>
                 ))
               }
@@ -234,8 +235,8 @@ function LLMBotComponent(props) {
             suggestionArr.length ? (
               <div className='usr-sugg-prompt'>
                 {
-                  suggestionArr.map(sugg => (
-                    <div onMouseDown={() => handleSubmitClick(sugg)}>{sugg}</div>
+                  suggestionArr.map((sugg, i) => (
+                    <div key={`sugg${i}`} onMouseDown={() => handleSubmitClick(sugg)}>{sugg}</div>
                   ))
                 }
               </div>

@@ -1,21 +1,38 @@
 const express = require('express')
-const Context = require('../models/Contexts')
-const Vocabulary = require('../models/Vocabulary')
-const bcrypt = require('bcryptjs')
+const Post = require('../models/Post')
 const Router = express.Router()
+const { isAuthenticated } = require('../utils/tokens')
+const { getPostsAggregate } = require('../utils/aggregate')
 
-const { sendRefreshTokenAsCookie, createTokens, verifyRefreshToken, isAuthenticated } = require('../utils/tokens')
-const { COOKIE_NAME } = require('../constants')
-const { getVoc, ctxtAggregate } = require('../utils/aggregate')
-
-Router.get('/getContext', isAuthenticated, async (req, res) => {
+Router.post('/create', isAuthenticated, async (req, res) => {
     try {
-        let contextData = await Context.aggregate(ctxtAggregate);
-        contextData = contextData[0]
-        const activeContextId = Object.keys(contextData)[0];
+        const { heading, content, communityId } = req.body;
+
+        const post = new Post({
+            heading, content, communityId 
+        })
+        const savedPost = await post.save();
         return res.status(200).json({
             ok: true,
-            data: { activeContextId, contextData: contextData }
+            data: { savedPost }
+        })
+    } catch (Err) { 
+        return res.status(400).json({
+            ok: false,
+            data: { ok: "fail" }
+        })
+    }
+})
+
+Router.post('/gp', isAuthenticated, async (req, res) => {
+    try {
+        const { user } = req;
+        const { communityId } = req.body
+        const posts = await Post.aggregate(getPostsAggregate(communityId, 0, 1000, user._id));
+
+        return res.status(200).json({
+            ok: true,
+            posts
         })
     } catch (Err) { 
         return res.status(400).json({
@@ -26,40 +43,23 @@ Router.get('/getContext', isAuthenticated, async (req, res) => {
 })
 
 
-Router.post('/getVoc', isAuthenticated, async (req, res) => {
-    try {
-        const { body, user } = req;
-        const { contextId, from, size } = body;
-        let result = await Vocabulary.aggregate(getVoc(contextId, from, size, user._id));
-        return res.status(200).json({
-            ok: true,
-            data: { vocabularies: result[0] }
-        })
-    } catch (Err) { 
-        return res.status(400).json({
-            ok: false,
-            data: { ok: "fail" }
-        })
-    }
-})
-
-const updateLike = async (data) => { 
-    const { isLiked, vocabId, userId } = data;
+const updatePostLike = async (data) => { 
+    const { isLiked, postId, userId } = data;
 
     try {
         let updatedVocabulary;
 
         if (isLiked) {
             // Add userId to likes array if not already present
-            updatedVocabulary = await Vocabulary.findByIdAndUpdate(
-                vocabId,
+            updatedVocabulary = await Post.findByIdAndUpdate(
+                postId,
                 { $addToSet: { likes: userId } }, // $addToSet ensures no duplicate userIds
                 { new: true }
             );
         } else {
             // Remove userId from likes array
-            updatedVocabulary = await Vocabulary.findByIdAndUpdate(
-                vocabId,
+            updatedVocabulary = await Post.findByIdAndUpdate(
+                postId,
                 { $pull: { likes: userId } },
                 { new: true }
             );
@@ -71,12 +71,11 @@ const updateLike = async (data) => {
 
         return updatedVocabulary;
     } catch (error) {
-        console.error("Error updating vocabulary likes:", error.message);
         throw error;
     }
 }
 
-const updateComment = async (data) => { 
+const updatePostComment = async (data) => { 
     const { vocabId, commentData } = data;
     try {
         let updatedVocabulary;
@@ -96,4 +95,4 @@ const updateComment = async (data) => {
     }
 }
 
-module.exports = { Router, updateLike, updateComment }
+module.exports = { Router, updatePostLike, updatePostComment }

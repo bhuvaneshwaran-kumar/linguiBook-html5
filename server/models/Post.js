@@ -2,12 +2,11 @@ const mongoose = require('mongoose')
 
 const { model, Schema } = mongoose
 
-const vocSchema = new Schema(
+const postSchema = new Schema(
     {
-        term: String,
-        meaning: String,
-        relmEg: String,
-        contextId: String,
+        heading: String,
+        content: String,
+        communityId: String,
         likes: {
             type: [String],
             default: [],
@@ -24,6 +23,6 @@ const vocSchema = new Schema(
     }
 )
 
-const Vocabulary = model("vocabularies", vocSchema)
+const Post = model("posts", postSchema)
 
-module.exports = Vocabulary
+module.exports = Post
